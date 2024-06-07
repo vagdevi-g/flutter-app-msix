@@ -1,0 +1,49 @@
+name: Build and Publish MSIX
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Print Flutter Version
+        run: flutter --version
+
+      - name: Enable Long Paths
+        run: git config --system core.longpaths true
+
+      - name: Enable Windows Desktop for Flutter
+        run: flutter config --enable-windows-desktop
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Flutter App
+        run: |
+          version_str=$(cat ./pubspec.yaml | grep -oP '(?<=^version: ).*')
+          version=${version_str%%+*}
+          build_number=${version_str#*+}
+          flutter build windows --dart-define="APP_VERSION=$version" --dart-define="APP_BUILD_NUMBER=$build_number" -vv
+          echo "MSIX_PACKAGE_VERSION=$version.0" >> $GITHUB_ENV
+
+      - name: Build MSIX
+        run: flutter pub run msix:create --build-windows false --version $MSIX_PACKAGE_VERSION -v
+
+      - name: Copy MSIX Artifact
+        run: cp build/windows/x64/runner/Release/*.msix $GITHUB_WORKSPACE
+
+      - name: Publish MSIX Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: flutter_app_msix
+          path: $GITHUB_WORKSPACE/*.msix
