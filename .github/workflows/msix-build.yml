@@ -30,11 +30,11 @@ jobs:
 
       - name: Build Flutter App
         run: |
-          version_str=$(cat ./pubspec.yaml | grep -oP '(?<=^version: ).*')
-          version=${version_str%%+*}
-          build_number=${version_str#*+}
+          $version_str = (Get-Content ./pubspec.yaml | Select-String '(?<=^version: ).*').Matches.Value
+          $version = $version_str.Split("+")[0]
+          $build_number = $version_str.Split("+")[1]
           flutter build windows --dart-define="APP_VERSION=$version" --dart-define="APP_BUILD_NUMBER=$build_number" -vv
-          echo "MSIX_PACKAGE_VERSION=$version.0" >> $GITHUB_ENV
+          echo "MSIX_PACKAGE_VERSION=$version.0" >> $env:GITHUB_ENV
 
       - name: Build MSIX
         run: flutter pub run msix:create --build-windows false --version $MSIX_PACKAGE_VERSION -v
