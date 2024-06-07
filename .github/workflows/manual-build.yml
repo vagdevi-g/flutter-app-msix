@@ -4,183 +4,183 @@ name: Manual Build App
 # or API.
 on:
   workflow_dispatch:
-    inputs:
-      flutter_channel:
-        description: "run with flutter channel, eg: master, beta, stable"
-        required: true
-        default: "master"
+    # inputs:
+    #   flutter_channel:
+    #     description: "run with flutter channel, eg: master, beta, stable"
+    #     required: true
+    #     default: "master"
   # push:
   #   tags:
   #     - 'v*'
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      # Work around https://github.com/actions/runner-images/issues/8659
-      - uses: mjp41/workaround8649@c8550b715ccdc17f89c8d5c28d7a48eeff9c94a8
-        with:
-          os: ubuntu-latest
+  # build-linux:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # Work around https://github.com/actions/runner-images/issues/8659
+  #     - uses: mjp41/workaround8649@c8550b715ccdc17f89c8d5c28d7a48eeff9c94a8
+  #       with:
+  #         os: ubuntu-latest
 
-      - run: g++ --version
-      - run: gcc --version
-      - run: sudo apt-get install libstdc++6
+  #     - run: g++ --version
+  #     - run: gcc --version
+  #     - run: sudo apt-get install libstdc++6
 
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: ${{ github.event.inputs.flutter_channel || 'master' }} # 'master', 'beta', 'dev' or 'stable'
+  #     - uses: actions/checkout@v3
+  #     - uses: subosito/flutter-action@v2
+  #       with:
+  #         channel: ${{ github.event.inputs.flutter_channel || 'master' }} # 'master', 'beta', 'dev' or 'stable'
 
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: 'stable' # 'stable' or 'nightly'
-          override: true
-          components: rustfmt, clippy
+  #     - uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: 'stable' # 'stable' or 'nightly'
+  #         override: true
+  #         components: rustfmt, clippy
 
-      # flutter build need ninja.
-      # https://github.com/subosito/flutter-action/issues/49
-      - name: Patch for linux build
-        run: |
-          flutter doctor
-          sudo apt-get update -y
-          sudo apt-get install -y ninja-build libgtk-3-dev
-          sudo apt-get install libsdl2-dev
-          sudo apt-get install webkit2gtk-4.1
-          sudo apt-get install libopus-dev libogg-dev
-          flutter doctor
+  #     # flutter build need ninja.
+  #     # https://github.com/subosito/flutter-action/issues/49
+  #     - name: Patch for linux build
+  #       run: |
+  #         flutter doctor
+  #         sudo apt-get update -y
+  #         sudo apt-get install -y ninja-build libgtk-3-dev
+  #         sudo apt-get install libsdl2-dev
+  #         sudo apt-get install webkit2gtk-4.1
+  #         sudo apt-get install libopus-dev libogg-dev
+  #         flutter doctor
 
-      - run: flutter --version
+  #     - run: flutter --version
 
-      - run: flutter config --enable-linux-desktop
+  #     - run: flutter config --enable-linux-desktop
 
-      # setup webcrypto for unit test
-      - run: dart run webcrypto:setup
+  #     # setup webcrypto for unit test
+  #     - run: dart run webcrypto:setup
 
-      - name: Run tests
-        run: flutter test
+  #     - name: Run tests
+  #       run: flutter test
 
-      - name: Build APP
-        run: flutter build linux
+  #     - name: Build APP
+  #       run: flutter build linux
 
-      - name: Compress Flutter build
-        run: tar -C build/linux/x64/release/bundle -cvf mixin-desktop-linux-portable.tar.gz .
+  #     - name: Compress Flutter build
+  #       run: tar -C build/linux/x64/release/bundle -cvf mixin-desktop-linux-portable.tar.gz .
 
-      - name: Upload app archive for next steps
-        uses: actions/upload-artifact@v3
-        with:
-          name: mixin-desktop-linux-portable-archive
-          path: mixin-desktop-linux-portable.tar.gz
+  #     - name: Upload app archive for next steps
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: mixin-desktop-linux-portable-archive
+  #         path: mixin-desktop-linux-portable.tar.gz
 
-      - name: Package APP
-        run: ./dist/linux_deb.sh
+  #     - name: Package APP
+  #       run: ./dist/linux_deb.sh
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: mixin_desktop_amd64.deb.zip
-          path: build/mixin_desktop_amd64.deb
+  #     - name: Upload Artifact
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: mixin_desktop_amd64.deb.zip
+  #         path: build/mixin_desktop_amd64.deb
 
-      - name: upload linux binary
-        uses: svenstaro/upload-release-action@v2
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: mixin-desktop-linux-portable.tar.gz
-          asset_name: mixin_desktop_linux_amd64_portable.tar.gz
-          tag: ${{ github.ref }}
-          overwrite: true
+  #     - name: upload linux binary
+  #       uses: svenstaro/upload-release-action@v2
+  #       if: startsWith(github.ref, 'refs/tags/v')
+  #       with:
+  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
+  #         file: mixin-desktop-linux-portable.tar.gz
+  #         asset_name: mixin_desktop_linux_amd64_portable.tar.gz
+  #         tag: ${{ github.ref }}
+  #         overwrite: true
 
-      - name: upload linux deb
-        uses: svenstaro/upload-release-action@v2
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/mixin_desktop_amd64.deb
-          asset_name: mixin_desktop_linux_amd64.deb
-          tag: ${{ github.ref }}
-          overwrite: true
+  #     - name: upload linux deb
+  #       uses: svenstaro/upload-release-action@v2
+  #       if: startsWith(github.ref, 'refs/tags/v')
+  #       with:
+  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
+  #         file: build/mixin_desktop_amd64.deb
+  #         asset_name: mixin_desktop_linux_amd64.deb
+  #         tag: ${{ github.ref }}
+  #         overwrite: true
 
-  build-linux-snap:
-    needs: build-linux
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  # build-linux-snap:
+  #   needs: build-linux
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
 
-      - name: Download app archive
-        uses: actions/download-artifact@v3
-        with:
-          name: mixin-desktop-linux-portable-archive
+  #     - name: Download app archive
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: mixin-desktop-linux-portable-archive
 
-      - name: uncompress app archive
-        run: |
-          mkdir -p build/linux/x64/release/bundle
-          tar -C build/linux/x64/release/bundle -xvf mixin-desktop-linux-portable.tar.gz
+  #     - name: uncompress app archive
+  #       run: |
+  #         mkdir -p build/linux/x64/release/bundle
+  #         tar -C build/linux/x64/release/bundle -xvf mixin-desktop-linux-portable.tar.gz
 
-      - name: Prepare snap build
-        run: ./dist/linux_snap_prepare.sh
+  #     - name: Prepare snap build
+  #       run: ./dist/linux_snap_prepare.sh
 
-      - name: Build .snap
-        uses: snapcore/action-build@v1
-        id: build-snap
-        with:
-          snapcraft-args: '--enable-experimental-extensions'
-          path: dist/snap
+  #     - name: Build .snap
+  #       uses: snapcore/action-build@v1
+  #       id: build-snap
+  #       with:
+  #         snapcraft-args: '--enable-experimental-extensions'
+  #         path: dist/snap
 
-      - name: Upload snap
-        uses: actions/upload-artifact@v3
-        with:
-          name: mixin-desktop-snap
-          path: ${{ steps.build-snap.outputs.snap }}
+  #     - name: Upload snap
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: mixin-desktop-snap
+  #         path: ${{ steps.build-snap.outputs.snap }}
 
-      - name: Upload linux snap
-        uses: svenstaro/upload-release-action@v2
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.build-snap.outputs.snap }}
-          asset_name: mixin_desktop_linux_amd64.snap
-          tag: ${{ github.ref }}
-          overwrite: true
+  #     - name: Upload linux snap
+  #       uses: svenstaro/upload-release-action@v2
+  #       if: startsWith(github.ref, 'refs/tags/v')
+  #       with:
+  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
+  #         file: ${{ steps.build-snap.outputs.snap }}
+  #         asset_name: mixin_desktop_linux_amd64.snap
+  #         tag: ${{ github.ref }}
+  #         overwrite: true
 
-  build-linux-appimage:
-    needs: build-linux
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  # build-linux-appimage:
+  #   needs: build-linux
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
 
-      - name: Download app archive
-        uses: actions/download-artifact@v3
-        with:
-          name: mixin-desktop-linux-portable-archive
+  #     - name: Download app archive
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: mixin-desktop-linux-portable-archive
 
-      - name: uncompress app archive
-        run: |
-          mkdir -p build/linux/x64/release/bundle
-          tar -C build/linux/x64/release/bundle -xvf mixin-desktop-linux-portable.tar.gz
+  #     - name: uncompress app archive
+  #       run: |
+  #         mkdir -p build/linux/x64/release/bundle
+  #         tar -C build/linux/x64/release/bundle -xvf mixin-desktop-linux-portable.tar.gz
 
-      - name: Build AppImage unsing appimage-builder
-        uses: docker://appimagecrafters/appimage-builder:0.9.1
-        with:
-          entrypoint: appimage-builder
-          args: --recipe ./AppImageBuilder.yml --skip-test
+  #     - name: Build AppImage unsing appimage-builder
+  #       uses: docker://appimagecrafters/appimage-builder:0.9.1
+  #       with:
+  #         entrypoint: appimage-builder
+  #         args: --recipe ./AppImageBuilder.yml --skip-test
 
-      - name: Upload AppImage Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: AppImage
-          path: './*.AppImage*'
+  #     - name: Upload AppImage Artifact
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: AppImage
+  #         path: './*.AppImage*'
 
-      - name: Upload linux AppImage
-        uses: svenstaro/upload-release-action@v2
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: Mixin Messenger-latest-x86_64.AppImage
-          asset_name: mixin_desktop_linux_amd64.AppImage
-          tag: ${{ github.ref }}
-          overwrite: true
+  #     - name: Upload linux AppImage
+  #       uses: svenstaro/upload-release-action@v2
+  #       if: startsWith(github.ref, 'refs/tags/v')
+  #       with:
+  #         repo_token: ${{ secrets.GITHUB_TOKEN }}
+  #         file: Mixin Messenger-latest-x86_64.AppImage
+  #         asset_name: mixin_desktop_linux_amd64.AppImage
+  #         tag: ${{ github.ref }}
+  #         overwrite: true
 
   build-windows:
     runs-on: windows-latest
@@ -223,16 +223,16 @@ jobs:
           flutter build windows --dart-define="APP_VERSION=$version" --dart-define="APP_BUILD_NUMBER=$build_number" -vv
           echo "MSIX_PACKAGE_VERSION=$version.0" >> $Env:GITHUB_OUTPUT
 
-      - name: Build Installer
-        run: |
-          "%programfiles(x86)%\Inno Setup 6\iscc.exe" "windows_inno_setup.iss"
-        shell: cmd
+      # - name: Build Installer
+      #   run: |
+      #     "%programfiles(x86)%\Inno Setup 6\iscc.exe" "windows_inno_setup.iss"
+      #   shell: cmd
 
-      - name: Upload Installer
-        uses: actions/upload-artifact@v3
-        with:
-          name: mixin_setup.exe.zip
-          path: build\mixin_setup.exe
+      # - name: Upload Installer
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: mixin_setup.exe.zip
+      #     path: build\mixin_setup.exe
 
       - name: Build msix
         run: |
