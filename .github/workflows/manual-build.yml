@@ -9,9 +9,9 @@ on:
         description: "run with flutter channel, eg: master, beta, stable"
         required: true
         default: "master"
-  push:
-    tags:
-      - 'v*'
+  # push:
+  #   tags:
+  #     - 'v*'
 
 jobs:
   build-linux:
