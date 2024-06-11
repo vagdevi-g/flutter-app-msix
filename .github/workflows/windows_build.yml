@@ -34,17 +34,11 @@ jobs:
           $version = $version_str.Split("+")[0]
           $build_number = $version_str.Split("+")[1]
           flutter build windows --dart-define="APP_VERSION=$version" --dart-define="APP_BUILD_NUMBER=$build_number" -vv
-          if ($LASTEXITCODE -ne 0) {
-            echo "Error building Flutter app"
-            exit 1
-          }
+          
 
       - name: Build MSIX
         run: flutter pub run msix:create --build-windows false --version $MSIX_PACKAGE_VERSION -v
-        if ($LASTEXITCODE -ne 0) {
-          echo "Error building MSIX package"
-          exit 1
-        }
+
 
       - name: Copy MSIX Artifact
         run: cp build/windows/x64/runner/Release/*.msix $GITHUB_WORKSPACE
