@@ -14,7 +14,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'table'
+          channel: 'stable'
 
       - name: Print Flutter Version
         run: flutter --version
