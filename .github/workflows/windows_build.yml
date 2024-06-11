@@ -1,4 +1,4 @@
-name: Build and Publish MSIX
+name: windows build
 
 on:
   workflow_dispatch:
