@@ -30,11 +30,17 @@ jobs:
 
       - name: Build Flutter App
         run: |
-          $version_str = (Get-Content./pubspec.yaml | Select-String '(?<=^version: ).*').Matches.Value
+          $version_str = (gc ./pubspec.yaml | Select-String '(?<=^version: ).*').Matches.Value
           $version = $version_str.Split("+")[0]
           $build_number = $version_str.Split("+")[1]
           flutter build windows --dart-define="APP_VERSION=$version" --dart-define="APP_BUILD_NUMBER=$build_number" -vv
           
+# $version_str=$(gc .\pubspec.yaml | select-string '(?<=^version: ).*' -AllMatches | Select-Object -Expand Matches | %{$_.Value})
+#           $version=$version_str.Split("+")[0]
+#           $build_number=$version_str.Split("+")[1]
+#           flutter build windows --dart-define="APP_VERSION=$version" --dart-define="APP_BUILD_NUMBER=$build_number" -vv
+
+
 
       - name: Build MSIX
         run: flutter pub run msix:create --build-windows false --version $MSIX_PACKAGE_VERSION -v
